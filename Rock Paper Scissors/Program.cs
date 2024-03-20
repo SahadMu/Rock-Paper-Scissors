@@ -1,45 +1,21 @@
 ﻿using System;
-using System.Threading;
+using System.IO;
 
-public class Program
+public enum Move
+{
+    None = 0,
+    Rock = 1,
+    Paper = 2,
+    Scissors = 3
+}
+
+class Program
 {
     static void Main(string[] args)
     {
-        Console.WriteLine("Welcome to Rock Paper Scissors!");
-
-        while (true)
-        {
-            Console.WriteLine("\nMain Menu:");
-            Console.WriteLine("1. Start Playing");
-            Console.WriteLine("2. Rules");
-            Console.WriteLine("3. Quit");
-
-            int choice;
-            while (true)
-            {
-                if (!int.TryParse(Console.ReadLine(), out choice) || choice < 1 || choice > 3)
-                {
-                    Console.WriteLine("Invalid choice. Please enter a number between 1 and 3.");
-                }
-                else
-                {
-                    break;
-                }
-            }
-
-            switch (choice)
-            {
-                case 1:
-                    rockPaperScissorsGame game = new rockPaperScissorsGame();
-                    game.Play();
-                    break;
-                case 2:
-                    rules.ShowRules();
-                    break;
-                case 3:
-                    Console.WriteLine("Goodbye!");
-                    return;
-            }
-        }
+        Console.Write("Please enter your name: ");
+        string playerName = Console.ReadLine();
+        rockPaperScissorsGame game = new rockPaperScissorsGame(playerName);
+        game.Start();
     }
 }

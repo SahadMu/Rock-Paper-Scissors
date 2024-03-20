@@ -1,77 +1,160 @@
-﻿public class rockPaperScissorsGame
+﻿using System.Text.Json;
+
+public class rockPaperScissorsGame
 {
-    private int roundsToWin;
     private Player player;
     private Computer computer;
+    private int roundsToWin;
+    private int playerScore;
+    private int computerScore;
 
-    public rockPaperScissorsGame()
+
+    public rockPaperScissorsGame(string playerName)
     {
-        player = new Player();
+        player = new Player() { Name = playerName };
         computer = new Computer();
+        playerScore = 0;
+        computerScore = 0;
     }
 
-    public void Play()
+    public void Start()
     {
-        Console.WriteLine("\nEnter the number of rounds (1, 3, 5) for the match:");
+        Console.WriteLine("Welcome to Rock, Paper, Scissors!");
+
         while (true)
         {
-            if (!int.TryParse(Console.ReadLine(), out roundsToWin) || (roundsToWin != 1 && roundsToWin != 3 && roundsToWin != 5))
+            Console.WriteLine("\nMain Menu:");
+            Console.WriteLine("1. Start playing");
+            Console.WriteLine("2. Rules");
+            Console.WriteLine("3. Quit");
+
+            Console.Write("Please select an option: ");
+            string choice = Console.ReadLine();
+
+            switch (choice)
             {
-                Console.WriteLine("Invalid choice. Please enter 1, 3, or 5.");
-            }
-            else
-            {
-                break;
+                case "1":
+                    PlayGame();
+                    break;
+                case "2":
+                    DisplayRules();
+                    break;
+                case "3":
+                    Console.WriteLine("Thank you for playing. Goodbye!");
+                    return;
+                default:
+                    Console.WriteLine("Invalid choice. Please select a valid option.");
+                    break;
             }
         }
+    }
 
-        int playerScore = 0;
-        int computerScore = 0;
+    private void PlayGame()
+    {
+        LoadPlayerStats();
 
-        while (playerScore < roundsToWin && computerScore < roundsToWin)
+        Console.WriteLine($"Welcome back, {player.Name}!");
+        Console.WriteLine($"Your current stats: Wins - {player.TotalWins}, Losses - {player.TotalLosses}, Win Percentage - {player.WinPercentage}%");
+
+        while (true)
         {
-            Console.WriteLine($"\nPlayer: {playerScore} | Computer: {computerScore}");
+            Console.Write("Enter the number of rounds to win (best of): ");
+            roundsToWin = int.Parse(Console.ReadLine());
 
-            int playerChoice = player.GetChoice();
+            // Reset scores for a new game
+            playerScore = 0;
+            computerScore = 0;
 
-            int computerChoice = computer.GetChoice();
-
-            Console.WriteLine($"\nYou chose: {rules.GetChoiceName(playerChoice)}");
-            Console.WriteLine($"Computer chose: {rules.GetChoiceName(computerChoice)}");
-
-            if ((playerChoice == 1 && computerChoice == 3) ||
-                (playerChoice == 2 && computerChoice == 1) ||
-                (playerChoice == 3 && computerChoice == 2))
+            while (playerScore < roundsToWin && computerScore < roundsToWin)
             {
-                Console.WriteLine("You win the round!");
-                playerScore++;
+                Console.WriteLine($"Round {playerScore + computerScore + 1}");
+
+                Move playerMove = player.ChooseMove();
+                Move computerMove = computer.ChooseMove();
+
+                Console.WriteLine($"{player.Name} chose {playerMove}");
+                Console.WriteLine($"{Computer.Name} chose {computerMove}");
+
+                DetermineWinner(playerMove, computerMove);
+
+                Console.WriteLine($"Score: {player.Name} - {playerScore}, {Computer.Name} - {computerScore}");
+                Console.WriteLine();
             }
-            else if (playerChoice == computerChoice)
+
+            Console.WriteLine("Game Over!");
+
+
+            if (playerScore > computerScore)
+            {
+                Console.WriteLine($"{player.Name} wins the game!");
+                player.TotalWins++;
+            }
+            else if (playerScore < computerScore)
+            {
+                Console.WriteLine($"{Computer.Name} wins the game!");
+                player.TotalLosses++;
+            }
+            else
             {
                 Console.WriteLine("It's a tie!");
             }
-            else
-            {
-                Console.WriteLine("Computer wins the round!");
-                computerScore++;
-            }
 
+            SavePlayerStats();
+
+            // Go back to the main menu
+            break;
         }
+    }
 
-        Console.WriteLine("\nMatch Result:");
-        Console.WriteLine($"Player: {playerScore} | Computer: {computerScore}");
 
-        if (playerScore > computerScore)
+
+    private void DetermineWinner(Move playerMove, Move computerMove)
+    {
+        if ((playerMove == Move.Rock && computerMove == Move.Scissors) ||
+            (playerMove == Move.Paper && computerMove == Move.Rock) ||
+            (playerMove == Move.Scissors && computerMove == Move.Paper))
         {
-            Console.WriteLine("You win the match!");
+            Console.WriteLine($"{player.Name} wins this round!");
+            playerScore++;
+            computer.UpdateResult(false);
         }
-        else if (playerScore < computerScore)
+        else if (playerMove == computerMove)
         {
-            Console.WriteLine("Computer wins the match!");
+            Console.WriteLine("It's a tie!");
+            computer.UpdateResult(false);
         }
         else
         {
-            Console.WriteLine("It's a tie!");
+            Console.WriteLine($"{Computer.Name} wins this round!");
+            computerScore++;
+            computer.UpdateResult(true);
         }
+        
+    }
+
+    private void LoadPlayerStats()
+    {
+        string filePath = $"{player.Name.ToLower()}.json";
+
+        if (File.Exists(filePath))
+        {
+            string json = File.ReadAllText(filePath);
+            player = JsonSerializer.Deserialize<Player>(json);
+        }
+    }
+
+    private void SavePlayerStats()
+    {
+        string filePath = $"{player.Name.ToLower()}.json";
+        string json = JsonSerializer.Serialize(player);
+        File.WriteAllText(filePath, json);
+    }
+
+    private void DisplayRules()
+    {
+        Console.WriteLine("\nRules of Rock, Paper, Scissors:");
+        Console.WriteLine("1. Rock beats Scissors");
+        Console.WriteLine("2. Scissors beats Paper");
+        Console.WriteLine("3. Paper beats Rock");
     }
 }
